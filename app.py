@@ -3,6 +3,7 @@ from ultralytics import YOLO
 import numpy as np
 import cv2
 import base64
+import os
 
 app = Flask(__name__)
 
@@ -60,4 +61,5 @@ def detect():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
