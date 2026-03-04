@@ -28,7 +28,7 @@ def detect():
     # Resize for cloud speed
     frame = cv2.resize(frame, (640, 480))
 
-    results = model(frame, imgsz=416)
+    results = model(frame, imgsz=320, conf=0.5)
 
     names = results[0].names
     boxes = results[0].boxes
