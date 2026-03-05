@@ -50,15 +50,23 @@ function startDetection() {
         })
         .then(response => response.json())
         .then(data => {
-            if(data.objects.length > 0){
-                const text = data.objects.join(". ");
 
-                if(text !== lastSpoken){
-                    speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-                    lastSpoken = text;
-                }
-            }
-        });
+    // Show processed frame with bounding boxes
+    if(data.image){
+        video.src = data.image;
+    }
+
+    // Voice output
+    if(data.objects.length > 0){
+        const text = data.objects.join(". ");
+
+        if(text !== lastSpoken){
+            speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+            lastSpoken = text;
+        }
+    }
+
+});
 
     }, 2000);
 }

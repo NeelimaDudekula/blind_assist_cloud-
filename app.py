@@ -17,6 +17,7 @@ def index():
 
 @app.route('/detect', methods=['POST'])
 def detect():
+
     data = request.json.get('image')
     if not data:
         return jsonify({"objects": []})
@@ -25,8 +26,7 @@ def detect():
     np_arr = np.frombuffer(image_data, np.uint8)
     frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    # Resize for cloud speed
-    frame = cv2.resize(frame, (640, 480))
+    frame = cv2.resize(frame, (640,480))
 
     results = model(frame, imgsz=320, conf=0.5)
 
@@ -36,17 +36,22 @@ def detect():
     detected = []
 
     for box in boxes:
+
         confidence = float(box.conf[0])
 
         if confidence > 0.6:
+
             cls = int(box.cls[0])
             label = names[cls]
 
-            x1, y1, x2, y2 = box.xyxy[0]
-            box_width = (x2 - x1).item()
+            x1,y1,x2,y2 = box.xyxy[0]
+            x1,y1,x2,y2 = int(x1),int(y1),int(x2),int(y2)
+
+            box_width = (x2-x1)
 
             if box_width > 0:
-                distance = round(400 / box_width, 2)
+
+                distance = round(400/box_width,2)
 
                 if distance < 0.8:
                     distance_text = "very close"
@@ -55,9 +60,38 @@ def detect():
                 else:
                     distance_text = "far"
 
-                detected.append(f"{label} {distance_text}")
+                text = f"{label} {distance_text}"
 
-    return jsonify({"objects": list(set(detected))})
+                detected.append(text)
+
+                # GREEN RECTANGLE
+                cv2.rectangle(
+                    frame,
+                    (x1,y1),
+                    (x2,y2),
+                    (0,255,0),
+                    2
+                )
+
+                # LABEL ABOVE BOX
+                cv2.putText(
+                    frame,
+                    text,
+                    (x1,y1-10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7,
+                    (0,0,255),
+                    2
+                )
+
+    # convert frame to base64
+    _,buffer = cv2.imencode('.jpg',frame)
+    frame_base64 = base64.b64encode(buffer).decode('utf-8')
+
+    return jsonify({
+        "objects": list(set(detected)),
+        "image":"data:image/jpeg;base64,"+frame_base64
+    })
 
 
 if __name__ == "__main__":
